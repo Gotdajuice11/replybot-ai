@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ReplyBot AI — Leads Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #080c10;
+  --bg-2: #0d1117;
+  --bg-3: #141b24;
+  --bg-4: #1c2530;
+  --border: rgba(255,255,255,.07);
+  --border-h: rgba(255,255,255,.13);
+  --txt: #e8edf3;
+  --txt-m: #7d909f;
+  --txt-l: #3d4f5e;
+  --blue: #0EA5E9;
+  --blue-d: #0284C7;
+  --blue-glow: rgba(14,165,233,.15);
+  --blue-glow-s: rgba(14,165,233,.25);
+  --green: #10b981;
+  --green-glow: rgba(16,185,129,.12);
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --hot: #f97316;
+  --warm: #f59e0b;
+  --cold: #64748b;
+  --radius: 14px;
+  --mono: 'DM Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--txt);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Login screen ─────────────────────────────────────── */
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(14,165,233,.12), transparent);
+}
+.login-card {
+  width: 360px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-h);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.5), 0 0 0 1px var(--border);
+}
+.login-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.login-logo span { color: var(--txt); }
+.login-sub { color: var(--txt-m); font-size: 13px; margin-bottom: 32px; }
+.login-label { font-size: 11px; font-weight: 600; color: var(--txt-m); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.login-inp {
+  width: 100%; background: var(--bg-3); border: 1px solid var(--border-h);
+  border-radius: 10px; padding: 11px 14px; color: var(--txt); font-size: 14px;
+  font-family: 'DM Sans', sans-serif; outline: none; margin-bottom: 20px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.login-inp:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); }
+.login-btn {
+  width: 100%; background: var(--blue); border: none; border-radius: 10px;
+  padding: 12px; color: #fff; font-size: 14px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+  transition: background .2s, transform .15s, box-shadow .2s;
+  box-shadow: 0 4px 20px var(--blue-glow-s);
+}
+.login-btn:hover { background: var(--blue-d); transform: translateY(-1px); box-shadow: 0 8px 28px var(--blue-glow-s); }
+.login-err { color: var(--red); font-size: 12px; margin-top: 10px; display: none; text-align: center; }
+
+/* ── Dashboard layout ────────────────────────────────── */
+#dashboard { display: none; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
+  background: var(--bg-2); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; z-index: 100; padding: 24px 0;
+}
+.sb-logo {
+  font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+  color: var(--blue); padding: 0 20px 24px; border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.sb-logo span { color: var(--txt); }
+.sb-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 20px;
+  color: var(--txt-m); font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all .15s; border-left: 2px solid transparent; margin: 1px 0;
+}
+.sb-item:hover { color: var(--txt); background: var(--bg-3); }
+.sb-item.active { color: var(--blue); border-left-color: var(--blue); background: rgba(14,165,233,.07); }
+.sb-icon { font-size: 15px; width: 20px; text-align: center; }
+.sb-bottom { margin-top: auto; padding: 0 20px; }
+.sb-logout {
+  width: 100%; background: transparent; border: 1px solid var(--border-h);
+  border-radius: 8px; padding: 8px; color: var(--txt-m); font-size: 12px;
+  cursor: pointer; transition: all .2s; font-family: 'DM Sans', sans-serif;
+}
+.sb-logout:hover { border-color: var(--red); color: var(--red); }
+
+/* Main content */
+.main { margin-left: 220px; padding: 32px; }
+
+/* Header */
+.page-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+.page-sub { color: var(--txt-m); font-size: 13px; margin-top: 2px; }
+.hdr-actions { display: flex; gap: 10px; align-items: center; }
+.btn-refresh {
+  background: var(--bg-3); border: 1px solid var(--border-h); border-radius: 8px;
+  padding: 7px 14px; color: var(--txt-m); font-size: 12px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all .2s; display: flex; align-items: center; gap: 6px;
+}
+.btn-refresh:hover { border-color: var(--blue); color: var(--blue); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: livePulse 2s infinite; }
+@keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,.4)} 50%{opacity:.6;box-shadow:0 0 0 4px rgba(16,185,129,0)} }
+
+/* ── Stat cards ───────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px 20px; position: relative; overflow: hidden; transition: border-color .2s;
+}
+.stat-card:hover { border-color: var(--border-h); }
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent, var(--blue));
+}
+.stat-label { font-size: 10px; font-weight: 600; color: var(--txt-m); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.stat-val { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--txt-m); margin-top: 5px; }
+.stat-card.s-total  { --accent: var(--blue); }
+.stat-card.s-qual   { --accent: var(--green); }
+.stat-card.s-hot    { --accent: var(--hot); }
+.stat-card.s-warm   { --accent: var(--warm); }
+.stat-card.s-cold   { --accent: var(--cold); }
+.stat-card.s-score  { --accent: #a78bfa; }
+
+/* ── Filters ──────────────────────────────────────────── */
+.filters {
+  display: flex; gap: 8px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;
+}
+.filter-btn {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 14px; color: var(--txt-m); font-size: 12px; font-weight: 500;
+  cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.filter-btn:hover { border-color: var(--border-h); color: var(--txt); }
+.filter-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+.filter-btn.hot.active  { background: var(--hot);  border-color: var(--hot); }
+.filter-btn.warm.active { background: var(--warm); border-color: var(--warm); color: #000; }
+.search-box {
+  margin-left: auto; background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 12px; color: var(--txt); font-size: 12px;
+  font-family: 'DM Sans', sans-serif; outline: none; width: 200px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.search-box::placeholder { color: var(--txt-l); }
+.search-box:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); }
+
+/* ── Leads table ──────────────────────────────────────── */
+.table-wrap {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+}
+.leads-table { width: 100%; border-collapse: collapse; }
+.leads-table th {
+  text-align: left; padding: 12px 16px; font-size: 10px; font-weight: 700;
+  color: var(--txt-l); letter-spacing: 1px; text-transform: uppercase;
+  border-bottom: 1px solid var(--border); background: var(--bg-3);
+}
+.leads-table td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+.leads-table tr:last-child td { border-bottom: none; }
+.leads-table tr { cursor: pointer; transition: background .15s; }
+.leads-table tr:hover td { background: var(--bg-3); }
+
+.tier-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.tier-badge.Hot  { background: rgba(249,115,22,.15); color: var(--hot);  border: 1px solid rgba(249,115,22,.25); }
+.tier-badge.Warm { background: rgba(245,158,11,.15); color: var(--warm); border: 1px solid rgba(245,158,11,.25); }
+.tier-badge.Cold { background: rgba(100,116,139,.12); color: var(--cold); border: 1px solid rgba(100,116,139,.2); }
+
+.score-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.score-bar { flex: 1; height: 4px; background: var(--bg-4); border-radius: 2px; overflow: hidden; max-width: 60px; }
+.score-bar-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
+.score-num { font-family: var(--mono); font-size: 12px; color: var(--txt-m); min-width: 28px; }
+
+.lead-name { font-weight: 600; color: var(--txt); }
+.lead-biz  { color: var(--txt-m); font-size: 12px; margin-top: 1px; }
+.contact-item { font-size: 12px; color: var(--txt-m); display: flex; align-items: center; gap: 4px; }
+.contact-item + .contact-item { margin-top: 2px; }
+.ts { font-family: var(--mono); font-size: 11px; color: var(--txt-l); }
+
+.qual-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.qual-dot.yes { background: var(--green); box-shadow: 0 0 6px rgba(16,185,129,.4); }
+.qual-dot.no  { background: var(--txt-l); }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--txt-m); }
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: .4; }
+.empty-state p { font-size: 14px; }
+
+/* Pagination */
+.pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid var(--border); }
+.page-info { font-size: 12px; color: var(--txt-m); }
+.page-btns { display: flex; gap: 4px; }
+.page-btn {
+  background: var(--bg-3); border: 1px solid var(--border); border-radius: 6px;
+  width: 30px; height: 28px; color: var(--txt-m); font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.page-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+.page-btn:disabled { opacity: .3; cursor: not-allowed; }
+.page-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* ── Transcript drawer ────────────────────────────────── */
+.drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity .25s; backdrop-filter: blur(3px);
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+.drawer {
+  position: fixed; right: 0; top: 0; bottom: 0; width: 460px; z-index: 201;
+  background: var(--bg-2); border-left: 1px solid var(--border-h);
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+  box-shadow: -20px 0 60px rgba(0,0,0,.4);
+}
+.drawer.open { transform: translateX(0); }
+
+.drawer-hdr {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0;
+}
+.drawer-name { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; }
+.drawer-meta { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.drawer-close {
+  background: var(--bg-3); border: 1px solid var(--border); border-radius: 8px;
+  width: 32px; height: 32px; color: var(--txt-m); cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0;
+}
+.drawer-close:hover { border-color: var(--red); color: var(--red); }
+
+.drawer-info { padding: 16px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.info-row { display: flex; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+.info-row:last-child { margin-bottom: 0; }
+.info-key { color: var(--txt-m); min-width: 80px; }
+.info-val { color: var(--txt); font-weight: 500; }
+
+.drawer-transcript { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; }
+.drawer-transcript::-webkit-scrollbar { width: 4px; }
+.drawer-transcript::-webkit-scrollbar-thumb { background: var(--border-h); border-radius: 2px; }
+
+.msg-row { display: flex; gap: 8px; }
+.msg-row.u { flex-direction: row-reverse; }
+.msg-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 2px; }
+.msg-av.b { background: rgba(14,165,233,.12); border: 1px solid rgba(14,165,233,.2); }
+.msg-av.u { background: rgba(255,255,255,.05); border: 1px solid var(--border); }
+.msg-bub { max-width: 80%; padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.6; word-break: break-word; }
+.msg-bub.b { background: var(--bg-3); border: 1px solid var(--border); border-top-left-radius: 4px; }
+.msg-bub.u { background: var(--blue); color: #fff; border-top-right-radius: 4px; }
+
+/* ── Skeleton loader ──────────────────────────────────── */
+.skel { background: linear-gradient(90deg, var(--bg-3) 25%, var(--bg-4) 50%, var(--bg-3) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ── Responsive ───────────────────────────────────────── */
+@media(max-width:900px){
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 20px; }
+  .stat-grid { grid-template-columns: repeat(3,1fr); }
+  .drawer { width: 100%; }
+}
+@media(max-width:600px){
+  .stat-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Login ───────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">📊 <span>ReplyBot</span> AI</div>
+    <p class="login-sub">Leads Dashboard — Admin Access</p>
+    <div class="login-label">Password</div>
+    <input class="login-inp" type="password" id="login-pwd" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    <div class="login-err" id="login-err">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- ── Dashboard ───────────────────────────────────────────── -->
+<div id="dashboard">
+  <nav class="sidebar">
+    <div class="sb-logo">📊 <span>ReplyBot</span> AI</div>
+    <div class="sb-item active" onclick="showPage('leads')"><span class="sb-icon">👥</span> All Leads</div>
+    <div class="sb-item" onclick="showPage('hot')"    ><span class="sb-icon">🔥</span> Hot Leads</div>
+    <div class="sb-item" onclick="showPage('warm')"   ><span class="sb-icon">🌡️</span> Warm Leads</div>
+    <div class="sb-item" onclick="showPage('qualified')"><span class="sb-icon">✅</span> Qualified</div>
+    <div class="sb-bottom">
+      <button class="sb-logout" onclick="logout()">← Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="page-hdr">
+      <div>
+        <div class="page-title" id="page-title">All Leads</div>
+        <div class="page-sub" id="page-sub">Live data from your ReplyBot AI widget</div>
+      </div>
+      <div class="hdr-actions">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt-m)">
+          <div class="live-dot"></div> Live
+        </div>
+        <button class="btn-refresh" onclick="loadData()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-grid" id="stat-grid">
+      <div class="stat-card s-total"><div class="stat-label">Total</div><div class="stat-val skel" style="width:48px;height:30px"></div><div class="stat-sub">conversations</div></div>
+      <div class="stat-card s-qual"> <div class="stat-label">Qualified</div><div class="stat-val skel" style="width:40px;height:30px"></div><div class="stat-sub">name + contact</div></div>
+      <div class="stat-card s-hot">  <div class="stat-label">🔥 Hot</div><div class="stat-val skel" style="width:36px;height:30px"></div><div class="stat-sub">score ≥ 70</div></div>
+      <div class="stat-card s-warm"> <div class="stat-label">🌡️ Warm</div><div class="stat-val skel" style="width:36px;height:30px"></div><div class="stat-sub">score 40–69</div></div>
+      <div class="stat-card s-cold"> <div class="stat-label">❄️ Cold</div><div class="stat-val skel" style="width:36px;height:30px"></div><div class="stat-sub">score &lt; 40</div></div>
+      <div class="stat-card s-score"><div class="stat-label">Avg Score</div><div class="stat-val skel" style="width:44px;height:30px"></div><div class="stat-sub">out of 100</div></div>
+    </div>
+
+    <!-- Filters + search -->
+    <div class="filters">
+      <button class="filter-btn active"    onclick="setFilter('all',  this)">All</button>
+      <button class="filter-btn hot"       onclick="setFilter('Hot',  this)">🔥 Hot</button>
+      <button class="filter-btn warm"      onclick="setFilter('Warm', this)">🌡️ Warm</button>
+      <button class="filter-btn"           onclick="setFilter('Cold', this)">❄️ Cold</button>
+      <button class="filter-btn"           onclick="setFilter('qualified', this)">✅ Qualified</button>
+      <input class="search-box" id="search-box" placeholder="Search name, email, business…" oninput="renderTable()"/>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table class="leads-table">
+        <thead>
+          <tr>
+            <th>Lead</th>
+            <th>Contact</th>
+            <th>Tier</th>
+            <th>Score</th>
+            <th>Qualified</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody">
+          <tr><td colspan="6"><div class="empty-state"><div class="icon">⏳</div><p>Loading leads…</p></div></td></tr>
+        </tbody>
+      </table>
+      <div class="pagination" id="pagination" style="display:none">
+        <div class="page-info" id="page-info"></div>
+        <div class="page-btns" id="page-btns"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── Transcript drawer ────────────────────────────────────── -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hdr">
+    <div>
+      <div class="drawer-name" id="d-name">—</div>
+      <div class="drawer-meta" id="d-meta"></div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-info" id="d-info"></div>
+  <div class="drawer-transcript" id="d-transcript"></div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────
+const ADMIN_PASSWORD = "replybot2025"; // ← Change this! Or move to server-side auth
+const PAGE_SIZE = 15;
+
+// ── State ─────────────────────────────────────────────────────
+let allLeads = [], stats = {}, filter = "all", currentPage = 1;
+
+// ── Auth ──────────────────────────────────────────────────────
+function doLogin() {
+  const pwd = document.getElementById("login-pwd").value;
+  if (pwd === ADMIN_PASSWORD) {
+    sessionStorage.setItem("rb_admin", "1");
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    loadData();
+  } else {
+    document.getElementById("login-err").style.display = "block";
+    document.getElementById("login-pwd").style.borderColor = "var(--red)";
+    setTimeout(() => { document.getElementById("login-pwd").style.borderColor = ""; }, 1500);
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem("rb_admin");
+  location.reload();
+}
+
+// Auto-login if session active
+window.addEventListener("DOMContentLoaded", () => {
+  if (sessionStorage.getItem("rb_admin")) {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    loadData();
+  }
+  document.getElementById("login-pwd").addEventListener("keydown", e => {
+    if (e.key === "Enter") doLogin();
+  });
+});
+
+// ── Data loading ──────────────────────────────────────────────
+async function loadData() {
+  await Promise.all([loadStats(), loadLeads()]);
+}
+
+async function loadStats() {
+  try {
+    const res  = await fetch("/api/stats");
+    stats      = await res.json();
+    renderStats();
+  } catch { renderStats(true); }
+}
+
+async function loadLeads() {
+  try {
+    const res  = await fetch("/api/leads");
+    const data = await res.json();
+    allLeads   = data.leads || [];
+    renderTable();
+  } catch {
+    document.getElementById("leads-tbody").innerHTML =
+      `<tr><td colspan="6"><div class="empty-state"><div class="icon">⚠️</div><p>Could not load leads. Is the server running?</p></div></td></tr>`;
+  }
+}
+
+// ── Render stats ──────────────────────────────────────────────
+function renderStats(err = false) {
+  const grid = document.getElementById("stat-grid");
+  const s = err ? { total:0, qualified:0, hot:0, warm:0, cold:0, avgScore:0 } : stats;
+  grid.innerHTML = `
+    <div class="stat-card s-total">
+      <div class="stat-label">Total</div>
+      <div class="stat-val">${s.total ?? 0}</div>
+      <div class="stat-sub">conversations</div>
+    </div>
+    <div class="stat-card s-qual">
+      <div class="stat-label">Qualified</div>
+      <div class="stat-val" style="color:var(--green)">${s.qualified ?? 0}</div>
+      <div class="stat-sub">${s.total ? Math.round((s.qualified/s.total)*100) : 0}% of total</div>
+    </div>
+    <div class="stat-card s-hot">
+      <div class="stat-label">🔥 Hot</div>
+      <div class="stat-val" style="color:var(--hot)">${s.hot ?? 0}</div>
+      <div class="stat-sub">score ≥ 70</div>
+    </div>
+    <div class="stat-card s-warm">
+      <div class="stat-label">🌡️ Warm</div>
+      <div class="stat-val" style="color:var(--warm)">${s.warm ?? 0}</div>
+      <div class="stat-sub">score 40–69</div>
+    </div>
+    <div class="stat-card s-cold">
+      <div class="stat-label">❄️ Cold</div>
+      <div class="stat-val" style="color:var(--cold)">${s.cold ?? 0}</div>
+      <div class="stat-sub">score &lt; 40</div>
+    </div>
+    <div class="stat-card s-score">
+      <div class="stat-label">Avg Score</div>
+      <div class="stat-val" style="color:#a78bfa">${s.avgScore ?? 0}</div>
+      <div class="stat-sub">out of 100</div>
+    </div>`;
+}
+
+// ── Render table ──────────────────────────────────────────────
+function getFiltered() {
+  const q = (document.getElementById("search-box")?.value || "").toLowerCase();
+  return allLeads.filter(l => {
+    const tierMatch = filter === "all" ? true
+      : filter === "qualified" ? l.qualified
+      : l.tier === filter;
+    if (!tierMatch) return false;
+    if (!q) return true;
+    return [l.lead_name, l.lead_email, l.lead_phone, l.business_name, l.business_type]
+      .some(v => (v || "").toLowerCase().includes(q));
+  });
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const total    = filtered.length;
+  const maxPage  = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > maxPage) currentPage = maxPage;
+  const page  = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const tbody = document.getElementById("leads-tbody");
+
+  if (!page.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">🔍</div><p>No leads found</p></div></td></tr>`;
+    document.getElementById("pagination").style.display = "none";
+    return;
+  }
+
+  tbody.innerHTML = page.map((l, i) => {
+    const scoreColor = l.score >= 70 ? "var(--hot)" : l.score >= 40 ? "var(--warm)" : "var(--cold)";
+    const ts = l.updated_at ? new Date(l.updated_at).toLocaleDateString("en-US", { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" }) : "—";
+    return `<tr onclick="openDrawer(${(currentPage-1)*PAGE_SIZE + i})">
+      <td>
+        <div class="lead-name">${esc(l.lead_name || "Unknown")}</div>
+        <div class="lead-biz">${esc(l.business_name || l.business_type || "—")}</div>
+      </td>
+      <td>
+        ${l.lead_email ? `<div class="contact-item">✉ ${esc(l.lead_email)}</div>` : ""}
+        ${l.lead_phone ? `<div class="contact-item">📞 ${esc(l.lead_phone)}</div>` : ""}
+        ${!l.lead_email && !l.lead_phone ? `<span style="color:var(--txt-l);font-size:12px">—</span>` : ""}
+      </td>
+      <td><span class="tier-badge ${l.tier || 'Cold'}">${tierEmoji(l.tier)} ${l.tier || 'Cold'}</span></td>
+      <td>
+        <div class="score-bar-wrap">
+          <div class="score-bar"><div class="score-bar-fill" style="width:${l.score||0}%;background:${scoreColor}"></div></div>
+          <div class="score-num">${l.score || 0}</div>
+        </div>
+      </td>
+      <td><span class="qual-dot ${l.qualified ? 'yes' : 'no'}"></span></td>
+      <td><span class="ts">${ts}</span></td>
+    </tr>`;
+  }).join("");
+
+  // Pagination
+  const pag = document.getElementById("pagination");
+  pag.style.display = total > PAGE_SIZE ? "flex" : "none";
+  document.getElementById("page-info").textContent = `${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE, total)} of ${total}`;
+  const btns = document.getElementById("page-btns");
+  btns.innerHTML = `
+    <button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?"disabled":""}>‹</button>
+    ${Array.from({length:maxPage},(_,i)=>i+1).filter(p=>p===1||p===maxPage||Math.abs(p-currentPage)<=1).map((p,idx,arr)=>{
+      const prev = arr[idx-1];
+      const gap = prev && p - prev > 1 ? `<span style="color:var(--txt-l);padding:0 4px">…</span>` : "";
+      return gap + `<button class="page-btn ${p===currentPage?"active":""}" onclick="goPage(${p})">${p}</button>`;
+    }).join("")}
+    <button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===maxPage?"disabled":""}>›</button>`;
+}
+
+function goPage(p) { currentPage = p; renderTable(); }
+function setFilter(f, el) {
+  filter = f; currentPage = 1;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  el.classList.add("active");
+  renderTable();
+}
+
+// ── Transcript drawer ─────────────────────────────────────────
+function openDrawer(idx) {
+  const filtered = getFiltered();
+  const lead = filtered[idx];
+  if (!lead) return;
+
+  document.getElementById("d-name").textContent = lead.lead_name || "Unknown";
+  document.getElementById("d-meta").innerHTML = `
+    <span class="tier-badge ${lead.tier||'Cold'}">${tierEmoji(lead.tier)} ${lead.tier||'Cold'}</span>
+    <span style="font-size:12px;color:var(--txt-m);font-family:var(--mono)">${lead.score||0}/100</span>
+    ${lead.qualified ? `<span style="font-size:11px;color:var(--green);background:var(--green-glow);padding:2px 8px;border-radius:20px;border:1px solid rgba(16,185,129,.2)">✅ Qualified</span>` : ""}`;
+
+  const info = [
+    ["Business",  lead.business_name],
+    ["Type",      lead.business_type],
+    ["Email",     lead.lead_email],
+    ["Phone",     lead.lead_phone],
+    ["Problem",   lead.problem],
+    ["Source",    lead.source],
+  ].filter(([,v]) => v);
+
+  document.getElementById("d-info").innerHTML = info.map(([k,v]) =>
+    `<div class="info-row"><span class="info-key">${k}</span><span class="info-val">${esc(v)}</span></div>`
+  ).join("") || `<div style="color:var(--txt-m);font-size:13px">No lead info captured yet.</div>`;
+
+  const msgs = lead.messages || [];
+  document.getElementById("d-transcript").innerHTML = msgs.length
+    ? msgs.map(m => `
+        <div class="msg-row ${m.role==="user"?"u":""}">
+          <div class="msg-av ${m.role==="user"?"u":"b"}">${m.role==="user"?"👤":"🤖"}</div>
+          <div class="msg-bub ${m.role==="user"?"u":"b"}">${esc(m.content).replace(/\n/g,"<br>")}</div>
+        </div>`).join("")
+    : `<div style="color:var(--txt-m);font-size:13px;text-align:center;padding:30px">No transcript available.</div>`;
+
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("drawer-overlay").classList.add("open");
+  // Scroll transcript to bottom
+  setTimeout(() => {
+    const t = document.getElementById("d-transcript");
+    t.scrollTop = t.scrollHeight;
+  }, 50);
+}
+
+function closeDrawer() {
+  document.getElementById("drawer").classList.remove("open");
+  document.getElementById("drawer-overlay").classList.remove("open");
+}
+
+// ── Nav ───────────────────────────────────────────────────────
+function showPage(p) {
+  document.querySelectorAll(".sb-item").forEach(i => i.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+  const titles = { leads:"All Leads", hot:"Hot Leads 🔥", warm:"Warm Leads 🌡️", qualified:"Qualified Leads ✅" };
+  const filters = { leads:"all", hot:"Hot", warm:"Warm", qualified:"qualified" };
+  document.getElementById("page-title").textContent = titles[p];
+  setFilter(filters[p], document.querySelector(`.filter-btn${p==="leads"?".active":""}`));
+  // sync filter button
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  const fMap = { leads:0, hot:1, warm:2, qualified:4 };
+  document.querySelectorAll(".filter-btn")[fMap[p]]?.classList.add("active");
+  filter = filters[p]; currentPage = 1; renderTable();
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function esc(s) { return String(s||"").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function tierEmoji(t) { return t==="Hot"?"🔥":t==="Warm"?"🌡️":"❄️"; }
+
+// Auto-refresh every 60s
+setInterval(() => { if (sessionStorage.getItem("rb_admin")) loadData(); }, 60000);
+</script>
+</body>
+</html>

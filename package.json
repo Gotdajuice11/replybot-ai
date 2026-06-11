@@ -1,0 +1,22 @@
+{
+  "name": "replybot-ai-whitelabel",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "client:dental": "CLIENT_CONFIG_PATH=client-configs/dental-example.js node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "express-rate-limit": "^7.0.0",
+    "node-fetch": "^3.3.0",
+    "twilio": "^5.0.0"
+  }
+}
