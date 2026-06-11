@@ -24,10 +24,7 @@ const configUrl  = pathToFileURL(path.resolve(configPath)).href;
 const { default: CLIENT } = await import(configUrl);
 
 // ── Startup validation ────────────────────────────────────────
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error("❌  ANTHROPIC_API_KEY is required. Current env keys:", Object.keys(process.env).join(', '));
-  process.exit(1);
-}
+
 }
 
 const app  = express();
