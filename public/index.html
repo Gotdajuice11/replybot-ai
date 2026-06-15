@@ -169,7 +169,7 @@ body{font-family:'DM Sans',sans-serif;background:linear-gradient(135deg,#e0f2fe 
 </div>
 
 <script>
-const API = "/api/chat";
+const API = "https://replybot-ai-production.up.railway.app/api/chat";
 
 let isOpen = false, loading = false, quickGone = false, history = [];
 let CONFIG = null;
@@ -187,7 +187,7 @@ function loadH()   { try { return JSON.parse(localStorage.getItem("rb_h")) || []
 // ── Load config from server & apply branding ──────────────────
 async function init() {
   try {
-    const res  = await fetch("/api/widget-config");
+    const res  = await fetch("https://replybot-ai-production.up.railway.app/api/widget-config");
     CONFIG     = await res.json();
 
     // Apply colors to CSS variables
@@ -358,7 +358,7 @@ function maybeCaptureLeadFromMsg(text) {
   const emailRe = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
   const phoneRe = /[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,}/;
   if (emailRe.test(text) || phoneRe.test(text)) {
-    fetch("/api/capture-lead", {
+   fetch("https://replybot-ai-production.up.railway.app/api/capture-lead", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ history, sessionId }),
     }).catch(() => {});
