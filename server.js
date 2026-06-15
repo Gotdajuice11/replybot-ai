@@ -48,7 +48,7 @@ app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   next();
 });
-app.use("/api/", rateLimit({ windowMs: 15*60*1000, max: 100, standardHeaders: true, legacyHeaders: false }));
+app.use("/api/", rateLimit({ windowMs: 15*60*1000, max: 100, trustProxy: true, standardHeaders: true, legacyHeaders: false }));
 
 const BIZ_SCORES = { dentist:10,dental:10,realtor:9,"real estate":9,"med spa":10,medspa:10,"law firm":9,lawyer:9,attorney:9,insurance:8,"home service":7,plumber:7,hvac:7,electrician:7,coach:6,consultant:6,agency:5 };
 
@@ -80,7 +80,7 @@ async function extractLead(history) {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 400, system: LEAD_EXTRACT_PROMPT, messages: [{ role: "user", content: convo }] }),
+      body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 400, system: LEAD_EXTRACT_PROMPT, messages: [{ role: "user", content: convo }] }),
     });
     if (!res.ok) throw new Error(`Anthropic ${res.status}`);
     const data = await res.json();
@@ -115,7 +115,7 @@ app.post("/api/chat", async (req, res) => {
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: buildSystemPrompt(), messages: history.map(({ role, content }) => ({ role, content })) }),
+      body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 1000, system: buildSystemPrompt(), messages: history.map(({ role, content }) => ({ role, content })) }),
     });
 
     if (!anthropicRes.ok) { const e = await anthropicRes.text(); console.error("Anthropic error:", e); return res.status(502).json({ error: "Upstream error" }); }
