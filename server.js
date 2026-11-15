@@ -68,7 +68,8 @@ function buildSystemPrompt() {
 const LEAD_EXTRACT_PROMPT = `You are a data extractor. Given a chat conversation, extract lead information mentioned by the visitor. Return ONLY valid JSON: {"name":null,"businessName":null,"businessType":null,"problem":null,"email":null,"phone":null,"isQualified":false,"wantsBooking":false}`;
 
 app.use(express.json({ limit: "64kb" }));
-app.use(express.static("public"));
+app.use(express.static("public", { extensions: ["html"] }));
+app.get(["/admin/", "/dashboard", "/dashboard/"], (_req, res) => res.redirect(302, "/admin"));
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
