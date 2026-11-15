@@ -398,42 +398,75 @@ body {
 
 <script>
 // ── Config ────────────────────────────────────────────────────
-const ADMIN_PASSWORD = "replybot2025"; // ← Change this! Or move to server-side auth
 const PAGE_SIZE = 15;
+const TOKEN_KEY = "rb_admin_token";
 
 // ── State ─────────────────────────────────────────────────────
 let allLeads = [], stats = {}, filter = "all", currentPage = 1;
 
-// ── Auth ──────────────────────────────────────────────────────
-function doLogin() {
+// ── Auth (checked by the server — no password in this page) ───
+function showDashboard() {
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  loadData();
+}
+
+function showLoginError(msg) {
+  const err = document.getElementById("login-err");
+  err.textContent = msg;
+  err.style.display = "block";
+  document.getElementById("login-pwd").style.borderColor = "var(--red)";
+  setTimeout(() => { document.getElementById("login-pwd").style.borderColor = ""; }, 1500);
+}
+
+let loggingIn = false;
+async function doLogin() {
+  if (loggingIn) return;
+  loggingIn = true;
   const pwd = document.getElementById("login-pwd").value;
-  if (pwd === ADMIN_PASSWORD) {
-    sessionStorage.setItem("rb_admin", "1");
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-    loadData();
-  } else {
-    document.getElementById("login-err").style.display = "block";
-    document.getElementById("login-pwd").style.borderColor = "var(--red)";
-    setTimeout(() => { document.getElementById("login-pwd").style.borderColor = ""; }, 1500);
+  try {
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pwd }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.token) {
+      sessionStorage.setItem(TOKEN_KEY, data.token);
+      document.getElementById("login-pwd").value = "";
+      showDashboard();
+    } else if (res.status === 429) {
+      showLoginError("Too many attempts. Wait 15 minutes and try again.");
+    } else if (res.status === 503) {
+      showLoginError("Admin password isn't set on the server yet.");
+    } else {
+      showLoginError("Incorrect password. Try again.");
+    }
+  } catch {
+    showLoginError("Couldn't reach the server. Try again.");
+  } finally {
+    loggingIn = false;
   }
 }
 
 function logout() {
+  sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem("rb_admin");
   location.reload();
 }
 
+// Calls the API with the saved token; signs out if it has expired.
+async function authFetch(url) {
+  const token = sessionStorage.getItem(TOKEN_KEY) || "";
+  const res = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+  if (res.status === 401) { logout(); throw new Error("Unauthorized"); }
+  return res;
+}
+
 // Auto-login if session active
 window.addEventListener("DOMContentLoaded", () => {
-  if (sessionStorage.getItem("rb_admin")) {
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-    loadData();
-  }
-  document.getElementById("login-pwd").addEventListener("keydown", e => {
-    if (e.key === "Enter") doLogin();
-  });
+  sessionStorage.removeItem("rb_admin"); // old client-side flag, no longer used
+  if (sessionStorage.getItem(TOKEN_KEY)) showDashboard();
 });
 
 // ── Data loading ──────────────────────────────────────────────
@@ -443,7 +476,7 @@ async function loadData() {
 
 async function loadStats() {
   try {
-    const res  = await fetch("/api/stats");
+    const res  = await authFetch("/api/stats");
     stats      = await res.json();
     renderStats();
   } catch { renderStats(true); }
@@ -451,7 +484,7 @@ async function loadStats() {
 
 async function loadLeads() {
   try {
-    const res  = await fetch("/api/leads");
+    const res  = await authFetch("/api/leads");
     const data = await res.json();
     allLeads   = data.leads || [];
     renderTable();
@@ -642,7 +675,7 @@ function esc(s) { return String(s||"").replace(/</g,"&lt;").replace(/>/g,"&gt;")
 function tierEmoji(t) { return t==="Hot"?"🔥":t==="Warm"?"🌡️":"❄️"; }
 
 // Auto-refresh every 60s
-setInterval(() => { if (sessionStorage.getItem("rb_admin")) loadData(); }, 60000);
+setInterval(() => { if (sessionStorage.getItem(TOKEN_KEY)) loadData(); }, 60000);
 </script>
 </body>
 </html>

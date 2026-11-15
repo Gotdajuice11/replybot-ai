@@ -7,6 +7,7 @@ import sgMail from "@sendgrid/mail";
 import { createClient } from "@supabase/supabase-js";
 import { pathToFileURL } from "url";
 import path from "path";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -19,6 +20,34 @@ const { default: CLIENT } = await import(configUrl);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ── Admin auth ─────────────────────────────────────────────────
+// Set ADMIN_PASSWORD in your host's environment variables. If it's missing,
+// the dashboard API stays locked (fails closed).
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+const TOKEN_TTL_MS = 12 * 60 * 60 * 1000; // stay signed in for 12 hours
+
+function sign(payload) {
+  return crypto.createHmac("sha256", "rb-admin:" + ADMIN_PASSWORD).update(payload).digest("hex");
+}
+function safeEqual(a, b) {
+  const ha = crypto.createHash("sha256").update(String(a)).digest();
+  const hb = crypto.createHash("sha256").update(String(b)).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
+function issueToken() {
+  const exp = String(Date.now() + TOKEN_TTL_MS);
+  return `${exp}.${sign(exp)}`;
+}
+function requireAdmin(req, res, next) {
+  if (!ADMIN_PASSWORD) return res.status(503).json({ error: "Admin password not configured" });
+  const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  const [exp, sig] = token.split(".");
+  if (!exp || !sig || !/^\d+$/.test(exp) || Number(exp) < Date.now() || !safeEqual(sig, sign(exp))) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  next();
+}
 
 const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
   ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null;
@@ -43,7 +72,7 @@ app.use(express.static("public"));
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.sendStatus(204);
   res.setHeader("X-Content-Type-Options", "nosniff");
   next();
@@ -101,6 +130,14 @@ async function saveTranscript(sessionId, history, lead, scoring) {
   } catch (err) { console.error("Supabase error:", err.message); }
 }
 
+const loginLimiter = rateLimit({ windowMs: 15*60*1000, max: 10, trustProxy: true, standardHeaders: true, legacyHeaders: false });
+app.post("/api/admin/login", loginLimiter, (req, res) => {
+  if (!ADMIN_PASSWORD) return res.status(503).json({ error: "Admin password not configured" });
+  const pwd = typeof req.body?.password === "string" ? req.body.password : "";
+  if (!pwd || !safeEqual(pwd, ADMIN_PASSWORD)) return res.status(401).json({ error: "Incorrect password" });
+  res.json({ token: issueToken() });
+});
+
 app.get("/api/widget-config", (_req, res) => {
   res.json({ brand: CLIENT.brand, colors: CLIENT.colors, bot: { greeting: CLIENT.bot.greeting, quickReplies: CLIENT.bot.quickReplies } });
 });
@@ -145,7 +182,7 @@ app.post("/api/capture-lead", async (req, res) => {
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok", brand: CLIENT.brand.name, anthropic: !!ANTHROPIC_KEY }));
 
-app.get("/api/stats", async (_req, res) => {
+app.get("/api/stats", requireAdmin, async (_req, res) => {
   if (!supabase) return res.json({ error: "Supabase not configured" });
   try {
     const { data, error } = await supabase.from("conversations").select("tier,qualified,score").limit(1000);
@@ -154,7 +191,7 @@ app.get("/api/stats", async (_req, res) => {
   } catch (err) { res.status(500).json({ error: "Could not load stats" }); }
 });
 
-app.get("/api/leads", async (_req, res) => {
+app.get("/api/leads", requireAdmin, async (_req, res) => {
   if (!supabase) return res.json({ leads: [] });
   try {
     const { data, error } = await supabase.from("conversations").select("*").order("updated_at", { ascending: false }).limit(500);
@@ -167,6 +204,7 @@ const server = app.listen(PORT, () => {
   console.log(`✅ ReplyBot AI running on port ${PORT}`);
   console.log(`   Brand: ${CLIENT.brand.name}`);
   console.log(`   Anthropic: ${ANTHROPIC_KEY ? "✅" : "❌ MISSING"}`);
+  console.log(`   Admin password: ${ADMIN_PASSWORD ? "✅" : "❌ MISSING — dashboard locked"}`);
 });
 
 ["SIGTERM","SIGINT"].forEach(sig => process.on(sig, () => { server.close(() => process.exit(0)); }));
