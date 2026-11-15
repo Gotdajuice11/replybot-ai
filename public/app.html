@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#0EA5E9"/>
+<title>ReplyBot AI — Your Account</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --blue:#0EA5E9;--blue-d:#0284C7;--bg:#f0f9ff;--white:#fff;--dark:#0f172a;--mid:#334155;--light:#64748b;
+  --border:#e0f2fe;--line:#e2e8f0;--red:#ef4444;--green:#10b981;--hot:#ef4444;--warm:#f59e0b;--cold:#3b82f6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--dark);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:var(--blue-d)}
+.hidden{display:none!important}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--blue);text-decoration:none}
+.logo span{color:var(--dark)}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+.card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(14,165,233,.06)}
+h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px}
+h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:10px}
+.sub{color:var(--light);font-size:14px;line-height:1.5;margin-bottom:16px}
+label{display:block;font-size:13px;font-weight:600;color:var(--mid);margin:14px 0 6px}
+label small{font-weight:400;color:var(--light)}
+input,textarea,select{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--dark)}
+textarea{min-height:90px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue)}
+input[type=color]{height:46px;padding:4px;width:80px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:700;font-size:15px;padding:12px 18px;border-radius:10px;border:none;cursor:pointer;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-d));color:#fff;width:100%;margin-top:18px}
+.btn-primary:disabled{opacity:.6;cursor:default}
+.btn-ghost{background:transparent;color:var(--mid);border:1.5px solid var(--line)}
+.btn-sm{font-size:13px;padding:8px 12px}
+.msg{font-size:14px;margin-top:12px;padding:10px 12px;border-radius:8px}
+.msg.err{background:#fef2f2;color:#b91c1c}
+.msg.ok{background:#ecfdf5;color:#047857}
+.tabs{display:flex;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:6px}
+.tabs button{flex:1;font:inherit;font-weight:700;font-size:14px;padding:10px;border:none;background:none;border-radius:8px;color:var(--light);cursor:pointer}
+.tabs button.on{background:#fff;color:var(--dark);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.link-btn{background:none;border:none;font:inherit;font-size:13px;color:var(--blue-d);cursor:pointer;margin-top:12px;text-decoration:underline}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+.topbar .actions{display:flex;gap:8px}
+.banner{border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:16px;line-height:1.45}
+.banner.trial{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.banner.off{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.code{position:relative;background:var(--dark);color:#e2e8f0;border-radius:10px;padding:14px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.5;word-break:break-all;white-space:pre-wrap}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--bg);border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-family:'Syne',sans-serif;font-size:22px}
+.stat span{font-size:11px;color:var(--light);text-transform:uppercase;letter-spacing:.4px}
+.filters{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}
+.filters button{font:inherit;font-size:13px;font-weight:600;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line);background:#fff;color:var(--mid);cursor:pointer;white-space:nowrap}
+.filters button.on{border-color:var(--blue);color:var(--blue-d);background:#f0f9ff}
+.lead{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-top:1px solid var(--line);cursor:pointer}
+.lead:first-child{border-top:none}
+.tier{font-size:11px;font-weight:700;padding:3px 8px;border-radius:12px;white-space:nowrap}
+.tier.Hot{background:#fef2f2;color:var(--hot)}.tier.Warm{background:#fffbeb;color:#b45309}.tier.Cold{background:#eff6ff;color:var(--cold)}
+.lead-main{flex:1;min-width:0}
+.lead-name{font-weight:700;font-size:15px}
+.lead-meta{font-size:13px;color:var(--light);margin-top:2px;overflow:hidden;text-overflow:ellipsis}
+.lead-date{font-size:12px;color:var(--light);white-space:nowrap}
+.empty{text-align:center;color:var(--light);padding:24px 8px;font-size:14px}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sheet{background:#fff;width:100%;max-width:640px;max-height:88vh;border-radius:18px 18px 0 0;padding:18px;overflow-y:auto}
+@media(min-width:640px){.modal{align-items:center}.sheet{border-radius:18px}}
+.bubble{max-width:85%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;margin:6px 0;white-space:pre-wrap;word-wrap:break-word}
+.bubble.user{background:var(--blue);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+.bubble.assistant{background:var(--bg);border-bottom-left-radius:4px}
+.kv{font-size:14px;margin:4px 0}.kv b{color:var(--mid)}
+.steps{padding-left:20px;font-size:14px;color:var(--mid);line-height:1.6}
+.center{min-height:80vh;display:flex;align-items:center;justify-content:center}
+.auth-box{width:100%;max-width:420px}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="v-loading" class="center"><div class="sub">Loading…</div></div>
+
+<!-- Sign up / sign in -->
+<div id="v-auth" class="center hidden">
+  <div class="wrap auth-box">
+    <div style="text-align:center;margin-bottom:18px"><a href="/" class="logo">Reply<span>Bot</span> AI</a></div>
+    <div class="card">
+      <div class="tabs">
+        <button id="tab-up" class="on" onclick="setAuthMode('up')">Create account</button>
+        <button id="tab-in" onclick="setAuthMode('in')">Sign in</button>
+      </div>
+      <p class="sub" id="auth-sub" style="margin:10px 0 0">Start your 7-day free trial. No card needed to try it.</p>
+      <form id="auth-form" onsubmit="submitAuth(event)">
+        <label for="a-email">Email</label>
+        <input id="a-email" type="email" autocomplete="email" required/>
+        <label for="a-pwd">Password <small id="pwd-hint">(at least 8 characters)</small></label>
+        <input id="a-pwd" type="password" autocomplete="new-password" minlength="8" required/>
+        <button class="btn btn-primary" id="auth-btn" type="submit">Create account →</button>
+      </form>
+      <button class="link-btn" id="forgot-btn" onclick="forgotPassword()" style="display:none">Forgot your password?</button>
+      <div id="auth-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- New password (after reset email) -->
+<div id="v-reset" class="center hidden">
+  <div class="wrap auth-box">
+    <div class="card">
+      <h2>Set a new password</h2>
+      <form onsubmit="saveNewPassword(event)">
+        <label for="r-pwd">New password <small>(at least 8 characters)</small></label>
+        <input id="r-pwd" type="password" autocomplete="new-password" minlength="8" required/>
+        <button class="btn btn-primary" type="submit">Save password</button>
+      </form>
+      <div id="reset-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bot setup (first time + edit) -->
+<div id="v-setup" class="hidden">
+  <div class="wrap">
+    <div class="topbar">
+      <a href="/" class="logo">Reply<span>Bot</span> AI</a>
+      <div class="actions"><button class="btn btn-ghost btn-sm hidden" id="setup-cancel" onclick="showHome()">Cancel</button></div>
+    </div>
+    <div class="card">
+      <h1 id="setup-title">Set up your chatbot</h1>
+      <p class="sub">Tell us about your business. Your bot uses this to answer visitors' questions and collect their contact info. You can change it any time.</p>
+      <form id="setup-form" onsubmit="saveSetup(event)">
+        <label for="f-name">Business name *</label>
+        <input id="f-name" name="name" required maxlength="120" placeholder="Bright Smile Dental"/>
+
+        <label for="f-industry">Type of business</label>
+        <input id="f-industry" name="industry" maxlength="80" list="industries" placeholder="Dental office"/>
+        <datalist id="industries">
+          <option>Dental office</option><option>Med spa</option><option>Law firm</option><option>Real estate agency</option>
+          <option>Plumbing company</option><option>HVAC company</option><option>Salon</option><option>Chiropractor</option><option>Insurance agency</option>
+        </datalist>
+
+        <label for="f-phone">Phone</label>
+        <input id="f-phone" name="phone" type="tel" maxlength="40" placeholder="(630) 555-0123"/>
+
+        <label for="f-email">Contact email <small>(shown to visitors)</small></label>
+        <input id="f-email" name="email" type="email" maxlength="160"/>
+
+        <label for="f-website">Website</label>
+        <input id="f-website" name="website" type="url" maxlength="500" placeholder="https://yourbusiness.com"/>
+
+        <label for="f-booking">Booking link <small>(Calendly, Acuity, your booking page…)</small></label>
+        <input id="f-booking" name="booking_url" type="url" maxlength="500" placeholder="https://calendly.com/yourname"/>
+
+        <label for="f-hours">Hours</label>
+        <textarea id="f-hours" name="hours" maxlength="600" style="min-height:70px" placeholder="Mon–Fri 8am–6pm, Sat 9am–1pm, closed Sunday"></textarea>
+
+        <label for="f-services">Services you offer</label>
+        <textarea id="f-services" name="services" maxlength="3000" placeholder="Cleanings, fillings, whitening, Invisalign, emergency visits…"></textarea>
+
+        <label for="f-faq">Common questions & answers <small>(the bot sticks to these facts)</small></label>
+        <textarea id="f-faq" name="faq" maxlength="6000" style="min-height:120px" placeholder="Do you take insurance? Yes — Delta, Cigna, and most PPO plans.&#10;Do you see kids? Yes, ages 3 and up.&#10;Is parking free? Yes, lot behind the building."></textarea>
+
+        <label for="f-greeting">Greeting message <small>(optional)</small></label>
+        <input id="f-greeting" name="greeting" maxlength="500" placeholder="Hi! 👋 Welcome to Bright Smile Dental. How can I help?"/>
+
+        <label for="f-color">Brand color</label>
+        <input id="f-color" name="primary_color" type="color" value="#0EA5E9"/>
+
+        <label for="f-alert">Email for new-lead alerts</label>
+        <input id="f-alert" name="alert_email" type="email" maxlength="160"/>
+
+        <label for="f-extra">Anything else the bot should know? <small>(optional)</small></label>
+        <textarea id="f-extra" name="extra_instructions" maxlength="2000" style="min-height:70px" placeholder="Always mention our free first consultation. Don't quote prices."></textarea>
+
+        <button class="btn btn-primary" id="setup-btn" type="submit">Save & get my bot →</button>
+      </form>
+      <div id="setup-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Home -->
+<div id="v-home" class="hidden">
+  <div class="wrap">
+    <div class="topbar">
+      <a href="/" class="logo">Reply<span>Bot</span> AI</a>
+      <div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="showSetup(true)">Edit bot</button>
+        <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign out</button>
+      </div>
+    </div>
+
+    <h1 id="h-name"></h1>
+    <p class="sub" id="h-email"></p>
+    <div id="h-banner"></div>
+
+    <div class="card" id="install-card">
+      <h2>Add the bot to your website</h2>
+      <p class="sub">Copy this code and paste it right before <code>&lt;/body&gt;</code> on your site. Using Wix, Squarespace, or WordPress? Paste it into the "custom code" or "footer code" setting — or send it to whoever manages your site.</p>
+      <div class="code" id="h-code"></div>
+      <div class="row">
+        <button class="btn btn-ghost btn-sm" onclick="copyCode()" id="copy-btn">📋 Copy code</button>
+        <a class="btn btn-ghost btn-sm" id="preview-link" target="_blank">👀 Try your bot</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h2 style="margin:0">Your leads</h2>
+        <button class="btn btn-ghost btn-sm" onclick="loadLeads()">↻ Refresh</button>
+      </div>
+      <div class="stats" id="h-stats"></div>
+      <div class="filters" id="h-filters"></div>
+      <div id="h-leads"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Transcript sheet -->
+<div id="modal" class="modal hidden" onclick="if(event.target===this)closeModal()">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+// ── Helpers ───────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const VIEWS = ["v-loading","v-auth","v-reset","v-setup","v-home"];
+function show(id) { VIEWS.forEach(v => $(v).classList.toggle("hidden", v !== id)); window.scrollTo(0, 0); }
+function msg(el, text, ok = false) { $(el).innerHTML = text ? `<div class="msg ${ok ? "ok" : "err"}">${esc(text)}</div>` : ""; }
+
+const params = new URLSearchParams(location.search);
+const chosenPlan = ["starter","pro","premium"].includes(params.get("plan")) ? params.get("plan") : null;
+if (chosenPlan) sessionStorage.setItem("rb_plan", chosenPlan);
+
+let sb = null, session = null, account = null, leads = [], leadFilter = "all";
+
+// ── API ───────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    ...opts,
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + (session?.access_token || ""), ...(opts.headers || {}) },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { await signOut(); throw new Error("Please sign in again."); }
+  if (!res.ok) throw new Error(data.error || "Something went wrong. Try again.");
+  return data;
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+(async function boot() {
+  try {
+    const cfg = await fetch("/api/public-config").then(r => r.json());
+    if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) throw new Error("Accounts aren't switched on yet.");
+    sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+  } catch (e) {
+    show("v-auth"); msg("auth-msg", e.message || "Couldn't reach the server."); return;
+  }
+  sb.auth.onAuthStateChange((event, s) => {
+    session = s;
+    if (event === "PASSWORD_RECOVERY") show("v-reset");
+  });
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  if (location.hash.includes("type=recovery")) { show("v-reset"); return; }
+  session ? loadAccount() : show("v-auth");
+})();
+
+// ── Auth ──────────────────────────────────────────────────────
+let authMode = "up";
+function setAuthMode(m) {
+  authMode = m;
+  $("tab-up").classList.toggle("on", m === "up");
+  $("tab-in").classList.toggle("on", m === "in");
+  $("auth-btn").textContent = m === "up" ? "Create account →" : "Sign in →";
+  $("auth-sub").textContent = m === "up" ? "Start your 7-day free trial. No card needed to try it." : "Welcome back.";
+  $("pwd-hint").style.display = m === "up" ? "" : "none";
+  $("a-pwd").autocomplete = m === "up" ? "new-password" : "current-password";
+  $("forgot-btn").style.display = m === "in" ? "" : "none";
+  msg("auth-msg", "");
+}
+
+async function submitAuth(e) {
+  e.preventDefault();
+  const email = $("a-email").value.trim(), password = $("a-pwd").value;
+  $("auth-btn").disabled = true; msg("auth-msg", "");
+  try {
+    if (authMode === "up") {
+      const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + "/app" } });
+      if (error) throw error;
+      if (!data.session) { setAuthMode("in"); msg("auth-msg", "Check your email for a confirmation link, then sign in here.", true); return; }
+      session = data.session;
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      session = data.session;
+    }
+    await loadAccount();
+  } catch (err) {
+    msg("auth-msg", /invalid login/i.test(err.message) ? "Wrong email or password." : err.message);
+  } finally { $("auth-btn").disabled = false; }
+}
+
+async function forgotPassword() {
+  const email = $("a-email").value.trim();
+  if (!email) { msg("auth-msg", "Type your email above first."); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + "/app" });
+  error ? msg("auth-msg", error.message) : msg("auth-msg", "If that email has an account, a reset link is on its way.", true);
+}
+
+async function saveNewPassword(e) {
+  e.preventDefault();
+  const { error } = await sb.auth.updateUser({ password: $("r-pwd").value });
+  if (error) { msg("reset-msg", error.message); return; }
+  history.replaceState(null, "", "/app");
+  const { data } = await sb.auth.getSession(); session = data.session;
+  loadAccount();
+}
+
+async function signOut() {
+  try { await sb?.auth.signOut(); } catch {}
+  session = null; account = null;
+  show("v-auth"); setAuthMode("in");
+}
+
+// ── Account ───────────────────────────────────────────────────
+async function loadAccount() {
+  show("v-loading");
+  try {
+    account = await api("/api/me");
+    account.business ? showHome() : showSetup(false);
+  } catch (e) { show("v-auth"); msg("auth-msg", e.message); }
+}
+
+const FORM_FIELDS = ["name","industry","phone","email","website","booking_url","hours","services","faq","greeting","primary_color","alert_email","extra_instructions"];
+
+function showSetup(editing) {
+  const b = account.business || {};
+  const form = $("setup-form");
+  FORM_FIELDS.forEach(k => { form.elements[k].value = b[k] ?? (k === "primary_color" ? "#0EA5E9" : ""); });
+  if (!editing) { form.elements.email.value = account.email || ""; form.elements.alert_email.value = account.email || ""; }
+  $("setup-title").textContent = editing ? "Edit your chatbot" : "Set up your chatbot";
+  $("setup-btn").textContent = editing ? "Save changes" : "Save & get my bot →";
+  $("setup-cancel").classList.toggle("hidden", !editing);
+  msg("setup-msg", "");
+  show("v-setup");
+}
+
+async function saveSetup(e) {
+  e.preventDefault();
+  const form = $("setup-form"), body = {};
+  FORM_FIELDS.forEach(k => body[k] = form.elements[k].value);
+  if (!account.business) body.plan = sessionStorage.getItem("rb_plan") || "starter";
+  $("setup-btn").disabled = true; msg("setup-msg", "");
+  try {
+    const { business } = await api("/api/me/business", { method: "POST", body: JSON.stringify(body) });
+    account.business = business;
+    showHome();
+  } catch (err) { msg("setup-msg", err.message); }
+  finally { $("setup-btn").disabled = false; }
+}
+
+// ── Home ──────────────────────────────────────────────────────
+function embedCode(b) {
+  return `<script src="${location.origin}/widget.js"\n  data-rb-key="${b.embed_key}"\n  async defer><\/script>`;
+}
+
+function showHome() {
+  const b = account.business;
+  $("h-name").textContent = b.name;
+  $("h-email").textContent = `Signed in as ${account.email} · ${b.plan[0].toUpperCase() + b.plan.slice(1)} plan`;
+  let banner = "";
+  if (!b.active) {
+    banner = `<div class="banner off"><b>Your bot is paused.</b> Your free trial has ended, so the chat on your site tells visitors to contact you directly. Subscribe to turn it back on.</div>`;
+  } else if (b.subscription_status === "trialing" && b.trial_ends_at) {
+    const days = Math.max(0, Math.ceil((new Date(b.trial_ends_at) - Date.now()) / 864e5));
+    banner = `<div class="banner trial">🎉 Free trial: <b>${days} day${days === 1 ? "" : "s"} left</b>.</div>`;
+  }
+  $("h-banner").innerHTML = banner;
+  $("h-code").textContent = embedCode(b);
+  $("preview-link").href = `/preview?key=${encodeURIComponent(b.embed_key)}`;
+  show("v-home");
+  loadLeads();
+}
+
+async function copyCode() {
+  const text = embedCode(account.business);
+  try { await navigator.clipboard.writeText(text); }
+  catch { const t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); }
+  $("copy-btn").textContent = "✅ Copied"; setTimeout(() => $("copy-btn").textContent = "📋 Copy code", 2000);
+}
+
+async function loadLeads() {
+  try {
+    const data = await api("/api/me/leads");
+    leads = data.leads || [];
+    const s = data.stats || { total:0, hot:0, qualified:0 };
+    $("h-stats").innerHTML = `
+      <div class="stat"><b>${s.total}</b><span>Chats</span></div>
+      <div class="stat"><b style="color:var(--green)">${s.qualified}</b><span>Leads</span></div>
+      <div class="stat"><b style="color:var(--hot)">${s.hot}</b><span>🔥 Hot</span></div>`;
+    renderLeads();
+  } catch (e) { $("h-leads").innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+function renderLeads() {
+  const counts = { all: leads.length, Hot: 0, Warm: 0, Cold: 0 };
+  leads.forEach(l => counts[l.tier] = (counts[l.tier] || 0) + 1);
+  $("h-filters").innerHTML = ["all","Hot","Warm","Cold"].map(f =>
+    `<button class="${leadFilter === f ? "on" : ""}" onclick="leadFilter='${f}';renderLeads()">${f === "all" ? "All" : f} (${counts[f] || 0})</button>`).join("");
+  const list = leads.filter(l => leadFilter === "all" || l.tier === leadFilter);
+  if (!list.length) {
+    $("h-leads").innerHTML = `<div class="empty">${leads.length ? "No leads in this group." : "No chats yet. Once the bot is on your site, every conversation shows up here."}</div>`;
+    return;
+  }
+  $("h-leads").innerHTML = list.map(l => {
+    const i = leads.indexOf(l);
+    const contact = [l.lead_phone, l.lead_email].filter(Boolean).join(" · ") || l.problem || "No contact info yet";
+    const when = l.updated_at ? new Date(l.updated_at).toLocaleDateString(undefined, { month:"short", day:"numeric" }) : "";
+    return `<div class="lead" onclick="openLead(${i})">
+      <span class="tier ${esc(l.tier)}">${l.tier === "Hot" ? "🔥" : l.tier === "Warm" ? "🌡️" : "❄️"} ${esc(l.tier)}</span>
+      <div class="lead-main"><div class="lead-name">${esc(l.lead_name || "Visitor")}</div><div class="lead-meta">${esc(contact)}</div></div>
+      <div class="lead-date">${esc(when)}</div>
+    </div>`;
+  }).join("");
+}
+
+function openLead(i) {
+  const l = leads[i];
+  const msgs = Array.isArray(l.messages) ? l.messages : [];
+  $("sheet").innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h2 style="margin:0">${esc(l.lead_name || "Visitor")}</h2>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
+    </div>
+    ${l.lead_phone ? `<div class="kv"><b>Phone:</b> <a href="tel:${esc(l.lead_phone)}">${esc(l.lead_phone)}</a></div>` : ""}
+    ${l.lead_email ? `<div class="kv"><b>Email:</b> <a href="mailto:${esc(l.lead_email)}">${esc(l.lead_email)}</a></div>` : ""}
+    ${l.problem ? `<div class="kv"><b>Needs:</b> ${esc(l.problem)}</div>` : ""}
+    <div class="kv"><b>Score:</b> ${esc(l.score ?? 0)}/100 (${esc(l.tier)})</div>
+    <h2 style="margin-top:16px;font-size:15px">Conversation</h2>
+    ${msgs.map(m => `<div class="bubble ${m.role === "user" ? "user" : "assistant"}">${esc(m.content)}</div>`).join("") || '<div class="empty">No messages saved.</div>'}`;
+  $("modal").classList.remove("hidden");
+}
+function closeModal() { $("modal").classList.add("hidden"); }
+setInterval(() => { if (!$("v-home").classList.contains("hidden") && $("modal").classList.contains("hidden")) loadLeads(); }, 60000);
+</script>
+</body>
+</html>

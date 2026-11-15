@@ -214,6 +214,11 @@
     try {
       const url = `${BASE_URL}/api/widget-config${CLIENT_KEY ? "?key=" + encodeURIComponent(CLIENT_KEY) : ""}`;
       const res = await fetch(url);
+      if (res.status === 404) {
+        console.warn("[ReplyBot AI] Unknown data-rb-key — check the embed code in your ReplyBot account.");
+        toggle.remove(); win.remove();
+        return;
+      }
       CONFIG    = await res.json();
 
       // Apply CSS color variables
