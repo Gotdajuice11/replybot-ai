@@ -8,7 +8,7 @@
     "client:dental": "CLIENT_CONFIG_PATH=client-configs/dental-example.js node server.js"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.0",

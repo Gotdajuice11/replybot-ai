@@ -23,6 +23,9 @@ const configUrl = pathToFileURL(path.resolve(configPath)).href;
 const { default: CLIENT } = await import(configUrl);
 
 const app = express();
+// Railway sits in front of the app; trust its one proxy hop so req.ip is the real visitor
+// (otherwise every visitor shares one rate limit).
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3000;
 
 // ── Admin auth ─────────────────────────────────────────────────
